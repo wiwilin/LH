@@ -14,7 +14,7 @@ pipeline{
         
         stage('terraform plan'){
             when{
-                not equals expected: true, actual:params.destroy
+                not {   equals expected: true, actual:params.destroy    }
             }
             steps{
                 sh "terraform plan  -var='access_key=${access_key}' -var='secret_key=${secret_key}' "
