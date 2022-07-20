@@ -1,0 +1,32 @@
+pipeline{
+    agent any
+    parameters{
+        booleanParam(name:'destroy',defaultValue: false, description:'terraform destroy?')
+    }
+    environment{
+        access_key = credentials('LH-aws-access_key-prod')
+        secret_key = credentials('LH-aws-secret_key-prod')
+    }
+    stages{
+        stage('terraform init'){
+            sh "terraform init"
+        }
+        
+        stage('terraform plan'){
+            when{
+                not equals expected: true, actual:params.destroy
+            }
+            steps{
+                sh "terraform plan  -var='access_key=${access_key}' -var='secret_key=${secret_key}' "
+            }
+        }
+        stage('destroy'){
+            when {
+					equals expected: true, actual: params.destroy
+			}
+            steps{
+                sh "terraform plan  -var='access_key=${access_key}' -var='secret_key=${secret_key}' "
+            }
+        }
+    }
+}
