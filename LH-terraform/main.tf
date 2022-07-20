@@ -10,6 +10,8 @@ terraform {
 provider "aws" {
   region = "ap-southeast-2"
   profile = "default"
+  access_key = var.your_access_key
+  secret_key = var.your_secret_key
 }
 
 resource "aws_vpc" "LH-vpc" {
@@ -50,30 +52,30 @@ resource "aws_security_group" "LH-sg" {
   }
 }
 
-  resource "aws_instance" "LH-ec2-airflow" {
+  resource "aws_instance" "LH-ec2-jenkins" {
   ami  = "ami-07620139298af599e"
   instance_type = "t2.micro"
   key_name = "LH-keypair"
   vpc_security_group_ids = [aws_security_group.LH-sg.id]
 
-  user_data = file("airflow.sh")
+  user_data = file("jenkins.sh")
 
-  tags = {
-    Name = "LH-ec2-airflow"
-  }
-}
-
-resource "aws_instance" "LH-ec2-jenkins" {
-  ami  = "ami-07620139298af599e"
-  instance_type = "t2.micro"
-  key_name = "LH-keypair"
-  vpc_security_group_ids = [aws_security_group.LH-sg.id]
   tags = {
     Name = "LH-ec2-jenkins"
   }
+}
+
+resource "aws_instance" "LH-ec2-airflow" {
+  ami  = "ami-07620139298af599e"
+  instance_type = "t2.micro"
+  key_name = "LH-keypair"
+  vpc_security_group_ids = [aws_security_group.LH-sg.id]
+  tags = {
+    Name = "LH-ec2-airflow"
+  }
     provisioner "file" {
-    source      = "jenkins.sh"
-    destination = "jenkins.sh"
+    source      = "airflow.sh"
+    destination = "/tmp/airflow.sh"
   }
   
   connection {
@@ -86,8 +88,8 @@ resource "aws_instance" "LH-ec2-jenkins" {
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x jenkins.sh",
-      "jenkins.sh args",
+      "chmod +x /tmp/airflow.sh",
+      "/tmp/airflow.sh args",
     ]
   }
 }
