@@ -22,7 +22,7 @@ pipeline{
         stage("Build Docker Image"){
             steps{
                 script{
-                    LH-app = docker.build("${IMAGENAME}") 
+                    app = docker.build("${IMAGENAME}") 
                 }
             }
         }
@@ -31,7 +31,7 @@ pipeline{
                 script{
                     docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com'","ecr:${REGION}:${CREDENTIAL}")
                     {
-                        LH-app.push()
+                        app.push()
                     }
                 }
         }
