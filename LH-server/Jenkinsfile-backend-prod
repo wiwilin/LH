@@ -1,5 +1,7 @@
 pipeline{
-    agent docker {image 'node:16.5.0'}
+    agent {
+        docker { image 'node:16.5.0' }
+    }
     environment{
         AWS_ACCOUNT_ID = "000982848868"
         IMAGENAME = 'LH-image'
