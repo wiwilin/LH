@@ -1,0 +1,55 @@
+pipeline{
+    agent docker {image 'node:16.5.0'}
+    environment{
+        AWS_ACCOUNT_ID = "000982848868"
+        IMAGENAME = 'LH-image'
+        CREDENTIAL = 'LH-aws-cred-prod'
+        REGION = 'ap-southeast-2'
+        CLUSTER = 'LH-ecs-cluster-backup'
+        SERVICE = 'LH-ecs-service-backup'
+
+    }
+    options{
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 1, unit: 'HOURS')
+    }
+    stages {
+        stage("Run Test")
+        {
+            sh 'npm install'
+            //sh 'npm run test'
+        }
+        stage("Build Docker Image"){
+            steps{
+                script{
+                    LH-app = docker.build("${IMAGENAME}:latest") 
+                }
+            }
+        }
+        stage("Push to ECR")
+            steps{
+                script{
+                    docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com'","ecr:${REGION}:${CREDENTIAL}")
+                    {
+                        LH-app.push()
+                    }
+                }
+        }
+        stage("Deploy to ECS")
+            steps{
+                withAWS(credentials:'LH-aws-cred-prod')
+                {
+                    sh("/usr/local/bin/aws ecs update-service --cluster ${CLUSTER} --service ${SERVICE} --force-new-deployment >/dev/null")
+                }
+            }
+    }
+
+} 
+post {
+    success {
+        echo 'success'
+    }
+    failure{
+        echo 'failed'
+    }
+}
